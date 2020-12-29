@@ -1,0 +1,9 @@
+#include "bgfx_compute.sh" 
+
+BUFFER_RW(_counter, uint, 0);
+
+NUM_THREADS(1, 1, 1)
+void main() 
+{
+	_counter[0] = 0;
+}

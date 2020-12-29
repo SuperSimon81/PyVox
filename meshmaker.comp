@@ -1,0 +1,97 @@
+#include <bgfx_compute.sh>
+#include "voxeldata.comp"
+#include "packing.comp"
+
+BUFFER_WR(_vertices,vec4,0);
+BUFFER_RW(_counter, uint, 1);
+SAMPLER3D(s_data,2);
+uniform vec4 _offset;
+
+int to_lookup(vec3 input)
+{
+return (int(input.x + input.y*64 + input.z*64*64));
+}
+
+
+float hash(vec3 p)
+{
+	return fract(sin(dot(p.xz*p.y, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+
+bool checkVoxel(ivec3 pos)
+{
+	//pos = pos - ivec3(1,1,1);
+	float texel = texelFetch(s_data,pos,0);
+	if(texel>0)
+		{
+			return true;
+		}
+	return false;
+}
+
+void makeCube(ivec3 pos,vec3 offset)
+{
+	int count=0;
+	
+	float col = texelFetch(s_data,pos,0);
+	if(col>0)	
+	{
+		
+		for(int i = 0; i < 6;i++)
+		{
+			//if ((pos + faceChecks[i]).x >= 0 && (pos + faceChecks[i]).x <= 32)
+			if((pos + faceChecks[i]).y <64)
+			{
+			if((checkVoxel(pos + faceChecks[i])==false))
+				{
+				//texelFetch(s_data,pos,0);
+				//col = _offset.x;
+				ivec3 normal = faceChecks[i]+ivec3(1,1,1);
+				count = atomicAdd(_counter[0],6);
+				_vertices[count + 0] = vec4(vec3_uint8_to_float(ivec3(voxelVerts[triangles[i][0]]+pos)),vec3_uint8_to_float(normal),0,col); 
+				_vertices[count + 1] = vec4(vec3_uint8_to_float(ivec3(voxelVerts[triangles[i][1]]+pos)),vec3_uint8_to_float(normal),0,col); 
+				_vertices[count + 2] = vec4(vec3_uint8_to_float(ivec3(voxelVerts[triangles[i][2]]+pos)),vec3_uint8_to_float(normal),0,col); 			
+				_vertices[count + 3] = vec4(vec3_uint8_to_float(ivec3(voxelVerts[triangles[i][2]]+pos)),vec3_uint8_to_float(normal),0,col); 	
+				_vertices[count + 4] = vec4(vec3_uint8_to_float(ivec3(voxelVerts[triangles[i][1]]+pos)),vec3_uint8_to_float(normal),0,col); 
+				_vertices[count + 5] = vec4(vec3_uint8_to_float(ivec3(voxelVerts[triangles[i][3]]+pos)),vec3_uint8_to_float(normal),0,col); 
+				
+				
+				
+				/*_vertices[count + 0] = vec4(voxelVerts[triangles[i][0]]+pos+_offset.xyz,col); 
+				//_vertices[count + 1] = vec4(voxelVerts[triangles[i][0]]+pos+_offset.xyz,0); 
+				_vertices[count + 1] = vec4(voxelVerts[triangles[i][1]]+pos+_offset.xyz,col);
+				//_vertices[count + 3] = vec4(voxelVerts[triangles[i][1]]+pos+_offset.xyz,0);
+				_vertices[count + 2] = vec4(voxelVerts[triangles[i][2]]+pos+_offset.xyz,col);
+				//_vertices[count + 5] = vec4(voxelVerts[triangles[i][2]]+pos+_offset.xyz,0); 
+				_vertices[count + 3] = vec4(voxelVerts[triangles[i][2]]+pos+_offset.xyz,col);
+				//_vertices[count + 7] = vec4(voxelVerts[triangles[i][2]]+pos+_offset.xyz,0);
+				_vertices[count + 4] = vec4(voxelVerts[triangles[i][1]]+pos+_offset.xyz,col);
+				//_vertices[count + 9] = vec4(voxelVerts[triangles[i][1]]+pos+_offset.xyz,0); 
+				_vertices[count + 5] = vec4(voxelVerts[triangles[i][3]]+pos+_offset.xyz,col); 
+				//_vertices[count + 11] = vec4(voxelVerts[triangles[i][3]]+pos+_offset.xyz,0);
+				*/
+				}
+			}
+			
+		}
+	}
+}
+
+
+
+
+NUM_THREADS(1, 1, 1)
+void main()
+{
+//int count = atomicAdd(_counter[0],1);
+//_value[count+0] = vec4(-0.866,-0.5,count,1);
+//_value[count+1] = vec4(0.886,-0.5,count,0);
+//_value[count+2] = vec4(0,faceChecks[1].z,count,0);
+//vec3 test = gl_WorkGroupSize;
+vec3 pos = vec3(gl_GlobalInvocationID.x+1,gl_GlobalInvocationID.y,gl_GlobalInvocationID.z+1);
+makeCube(pos,vec3(32,32,32));
+}
+
+
+

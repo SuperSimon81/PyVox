@@ -1,0 +1,73 @@
+
+
+
+/*bool checkVoxel(vec3 pos)
+{
+	float texel = texelFetch(s_data,pos,0);
+	if(texel>0)
+		{
+			return true;
+		}
+	return false;
+}*/
+
+const vec3 voxelVerts[8] = {
+        ivec3(0, 0, 0),
+		ivec3(1, 0, 0),
+		ivec3(1, 1, 0),
+		ivec3(0, 1, 0),
+		ivec3(0, 0, 1),
+		ivec3(1, 0, 1),
+		ivec3(1, 1, 1),
+		ivec3(0, 1, 1)};
+
+const vec3 centeredVerts[8] = {
+        vec3(-0.5f, -0.5f, -0.5f),
+		vec3(0.5f, -0.5f, -0.5f),
+		vec3(0.5f, 0.5f, -0.5f),
+		vec3(-0.5f, 0.5f, -0.5f),
+		vec3(-0.5f, -0.5f, 0.5f),
+		vec3(0.5f, -0.5f, 0.5f),
+		vec3(0.5f, 0.5f, 0.5f),
+		vec3(-0.5f, 0.5f, 0.5f)};
+
+const ivec3 faceChecks[6] = {
+		ivec3( 0, 0, -1),
+		ivec3( 0, 0, 1),
+		ivec3( 0, 1, 0),
+		ivec3( 0, -1, 0),
+		ivec3( -1, 0,0),
+		ivec3( 1, 0, 0)
+		
+		
+	};
+
+const int triangles[6][4] = {
+		{0, 3, 1, 2}, // Back Face
+		{5, 6, 4, 7}, // Front Face
+		{3, 7, 2, 6}, // Top Face
+		{1, 5, 0, 4}, // Bottom Face
+		{4, 7, 0, 3}, // Left Face
+		{1, 2, 5, 6} // Right Face
+		};
+
+/*float color2float(vec3 color) 
+{
+	color = clamp(color, 0.0, 1.0);
+	return floor(color.r * c_precision + 0.5)
+		+ floor(color.b * c_precision + 0.5) * c_precisionp1
+		+ floor(color.g * c_precision + 0.5) * c_precisionp1 * c_precisionp1;
+}
+
+/*
+ * \param value 3-component encoded float
+ * \returns normalized RGB value
+ */
+
+/*vec3 float2color(float value) {
+	vec3 color;
+	color.r = mod(value, c_precisionp1) / c_precision;
+	color.b = mod(floor(value / c_precisionp1), c_precisionp1) / c_precision;
+	color.g = floor(value / (c_precisionp1 * c_precisionp1)) / c_precision;
+	return color;
+}*/

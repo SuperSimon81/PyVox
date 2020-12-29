@@ -1,0 +1,30 @@
+float vec3_to_float(vec3 rgb, float scale){
+    return rgb.r +
+        (rgb.g/scale)+
+        (rgb.b/(scale*scale));
+}
+
+vec3 float_to_vec3(float v, float scale) {
+    float r = v;
+    float g = mod(v*scale,1.0);
+    r-= g/scale;
+    float b = mod(v*scale*scale,1.0);
+    g-=b/scale;
+    return vec3(r,g,b);
+}
+
+ivec3 float_to_vec3_uint8(float src)
+{
+    // Unpack to the 0-255 range
+    int r = floor(src/65536);
+    int g = floor(fmod(src, 65536)/256);
+    int b = fmod(src, 256);
+    return ivec3(r,g,b);
+}
+
+float vec3_uint8_to_float(ivec3 arr)
+{
+    float packedColor = (arr.x << 16) | (arr.y << 8) | arr.z;
+    return packedColor;
+}
+    
