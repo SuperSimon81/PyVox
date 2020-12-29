@@ -76,7 +76,6 @@ class ExampleWindow(object):
         self.window = glfw.create_window(
             self.width, self.height, self.title, None, None
         )
-        glfw.set_input_mode(self.window,glfw.CURSOR,glfw.CURSOR_DISABLED)
         
         glfw.set_window_size_callback(self.window, self._handle_window_resize)
 

@@ -24,6 +24,7 @@ class Textures(ExampleWindow):
         super().__init__(width, height, title)
         self.elapsed_time = 0
         self.text = ""
+        self.light_info_text=""
         self.init_conf = bgfx.Init()
         self.init_conf.debug = True
         self.init_conf.resolution.width = self.width
@@ -37,6 +38,14 @@ class Textures(ExampleWindow):
         self.lastY = self.height/2
         self.yaw = 0
         self.pitch = 60
+        self.light_x = ImGui.Float()  
+        self.light_y = ImGui.Float()  
+        self.light_z = ImGui.Float() 
+        self.light_x.value = 0
+        self.light_y.value = 50
+        self.light_z.value = 0
+        
+        self.mouse_enabled = False
 
     def init(self, platform_data):
         float_size = np.dtype(np.float32).itemsize
@@ -46,7 +55,8 @@ class Textures(ExampleWindow):
         bgfx.reset(
             self.width, self.height, BGFX_RESET_VSYNC, self.init_conf.resolution.format,
         )
-
+        glfw.set_input_mode(self.window,glfw.CURSOR,glfw.CURSOR_DISABLED)
+        
         self.lastX, self.lastY, buttons_states = self.get_mouse_state()
         
         #bgfx.set_debug(BGFX_DEBUG_TEXT)
@@ -93,7 +103,8 @@ class Textures(ExampleWindow):
         self.fog_color_uniform = bgfx.create_uniform("_fog_color",bgfx.UniformType.VEC4)
         self.eye_pos_uniform = bgfx.create_uniform("_eye_pos",bgfx.UniformType.VEC4)
         self.light_uniform = bgfx.create_uniform("_light",bgfx.UniformType.VEC4)
-        bgfx.set_uniform(self.light_uniform,as_void_ptr((c_float * 4)(-10, -50,10,1)))
+        
+        bgfx.set_uniform(self.light_uniform,as_void_ptr((c_float * 4)(self.light_x.value, self.light_y.value,self.light_z.value,1)))
    
         bgfx.set_uniform(self.fog_color_uniform,as_void_ptr((c_float * 4)(0.01, 0.1,0.01,1)))
    
@@ -189,8 +200,19 @@ class Textures(ExampleWindow):
             if action == glfw.RELEASE:
                 self.move_side  = 0
 
-        if key == glfw.KEY_ESCAPE:
-            self.shutdown()
+        if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
+            if(self.mouse_enabled):
+                self.lastX =self.width / 2
+                self.lastY =self.height / 2
+                glfw.set_cursor_pos(self.window, self.width / 2, self.height / 2)
+                glfw.set_input_mode(self.window,glfw.CURSOR,glfw.CURSOR_DISABLED)
+                self.mouse_enabled = False
+            else:
+                glfw.set_cursor_pos(self.window, self.width / 2, self.height / 2)
+                glfw.set_input_mode(self.window,glfw.CURSOR,glfw.CURSOR_NORMAL)
+                self.mouse_enabled = True
+                
+        
 
     def shutdown(self):
         ImGuiExtra.imgui_destroy()
@@ -199,7 +221,7 @@ class Textures(ExampleWindow):
 
     def update(self, dt):
         float_size = np.dtype(np.float32).itemsize
-        
+        #glfw.set_cursor_pos(self.window, self.width / 2, self.height / 2);
         self.elapsed_time += dt
         self.mouse_x, self.mouse_y, buttons_states = self.get_mouse_state()
         ImGuiExtra.imgui_begin_frame(
@@ -212,20 +234,18 @@ class Textures(ExampleWindow):
         ImGuiExtra.imgui_end_frame()
         up_glm = (0,-1,0)  
         
-        xoffset = self.mouse_x - self.lastX
-        yoffset = self.lastY - self.mouse_y
-        self.lastX = self.mouse_x
-        self.lastY = self.mouse_y
+        if(not self.mouse_enabled):
+            xoffset = self.mouse_x - self.lastX
+            yoffset = self.lastY - self.mouse_y
+            self.lastX = self.mouse_x
+            self.lastY = self.mouse_y
 
-        self.yaw   += xoffset*0.5
-        self.pitch += yoffset*0.5
-        if self.pitch > 89:
-            self.pitch =  89.0
-        if self.pitch < -89:
-            self.pitch = -89
-        #self.x_rot += glm.rotate(glm.mat4x4(),(self.mouse_x-last_x),glm.vec3(1,0,0))
-        #self.y_rot += glm.rotate(glm.mat4x4(),(self.mouse_y-last_y),glm.vec3(0,1,0))
-        #forward_glm = forward_glm*self.x_rot*self.y_rot
+            self.yaw   += xoffset*0.5
+            self.pitch += yoffset*0.5
+            if self.pitch > 89:
+                self.pitch =  89.0
+            if self.pitch < -89:
+                self.pitch = -89
         
         self.direction = glm.vec3(0,0,0)
         self.direction.x = math.cos(glm.radians(self.yaw)) * math.cos(glm.radians(self.pitch));
@@ -249,7 +269,8 @@ class Textures(ExampleWindow):
        #bgfx.set_transform(as_void_ptr(glm.value_ptr(model_matrix)), 1)
         bgfx.set_uniform(self.eye_pos_uniform,as_void_ptr(glm.value_ptr(self.eye_glm)))
         #bgfx.set_texture(0,self.texture_lookup_uniform,self.texture_lookup)
-        
+        bgfx.set_uniform(self.light_uniform,as_void_ptr((c_float * 4)(self.light_x.value, self.light_y.value,self.light_z.value,1)))
+   
          #bgfx.update(self.vertex_buffer,0,vb_memory)
 
         # Set vertex and index buffer.
@@ -266,7 +287,7 @@ class Textures(ExampleWindow):
             test = np.array([chunk.chunk_position[1]*chunk.chunk_width,0,chunk.chunk_position[0]*chunk.chunk_width,0],np.float32)
             bgfx.set_uniform(self.offset_uniform,as_void_ptr((c_float * 4)(test[0], test[1],test[2],test[3])))
            
-            bgfx.set_vertex_buffer(0, chunk.vertex_buffer, 0, 100000)
+            bgfx.set_vertex_buffer(0, chunk.vertex_buffer, 0, 200000)
         
             bgfx.submit(0, self.main_program, 0, False)
 
@@ -287,9 +308,14 @@ class Textures(ExampleWindow):
         ImGui.begin("Info panel")
 
         ImGui.text(self.text)
+        
         #ImGui.text(self.debug_text)
-        #self.f = ImGui.Float(220)  
-        #ImGui.slider_float('float slider', self.f, 0, 1360, '%.2f', 1)
+         
+        ImGui.slider_float('light_x', self.light_x, 0, 100, '%.2f', 1)
+        ImGui.slider_float('light_y', self.light_y, 0, 100, '%.2f', 1)
+        ImGui.slider_float('light_z', self.light_z, 0, 100, '%.2f', 1)
+       
+        #ImGui.text(self.light_info_text)
         ImGui.end()
 
     def color2float(self,color): 
