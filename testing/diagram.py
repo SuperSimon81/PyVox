@@ -10,19 +10,26 @@ import time
 def draw_poly(level,angle,div,fill_color):
     print(level,angle)
     divisions = div[level]
-    #Apothem
-    a = (level-1)*math.cos(math.pi/(divisions/2))
-    #But not is its not a split
-    if div[level]==div[level-1]:
-        a=level-1
+    
+    a=level-1 
+    b=level-1
+    #APOTHEM
+    if not div[level]==div[level-1]:
+        if angle % 2 == 0:
+            a = (level-1)*math.cos(math.pi/(divisions/2))
+        else:
+            b = (level-1)*math.cos(math.pi/(divisions/2))
+    else:
+        a=level-1 
+        b=level-1
     x1 = level*math.sin(2*math.pi*angle/divisions) #top left
     x2 = level*math.sin(2*math.pi*(angle+1)/divisions) #top right
-    x3 = (a)*math.sin(2*math.pi*angle/divisions) #bottom left
+    x3 = (b)*math.sin(2*math.pi*angle/divisions) #bottom left
     x4 = (a)*math.sin(2*math.pi*(angle+1)/divisions) #bottom right
 
     y1 = level*math.cos(2*math.pi*angle/divisions)
     y2 = level*math.cos(2*math.pi*(angle+1)/divisions)
-    y3 = (a)*math.cos(2*math.pi*angle/divisions)
+    y3 = (b)*math.cos(2*math.pi*angle/divisions)
     y4 = (a)*math.cos(2*math.pi*(angle+1)/divisions)
     
     points=[[x1,y1],[x2,y2],[x4,y4],[x3,y3]]
@@ -120,21 +127,15 @@ for poly in range(1,shapes):
     #filled=draw_poly(n,0,divisions)
     #plt.gca().add_line(filled)
 
-polys = draw_neighbours(10,5,divisions)
+polys = draw_neighbours(4,12,divisions)
 for line in polys:
     pass
     plt.gca().add_line(line)
     
 
-test = draw_poly(5,0,divisions,'r')
+#test = draw_poly(5,0,divisions,'r')
 #plt.gca().add_line(test)
-
-        
 plt.axis('scaled')
 #print(divisions)
 
-
-plt.draw()
-print("cleared")
-
-time.sleep(10)
+plt.show()
