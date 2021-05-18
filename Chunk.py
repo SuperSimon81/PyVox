@@ -7,19 +7,18 @@ import VoxelData
 import time
 
 class Chunk():
-    def __init__(self,chunk_position,world,chunk_width,chunk_height):
+    def __init__(self,chunk_position,chunk_width,chunk_height):
         self.world_position = chunk_position * chunk_width + [chunk_width/2, chunk_width/2]
         self.chunk_width = chunk_width
         self.chunk_height = chunk_height
         self.chunk_position = chunk_position
-        self.world = world
+        #self.world = world
+        #self.noise = noise
         self.data_texture = 0
         self.is_visible = False
         self.is_generated = False
         self.vertices = []
-        
-        
-        #self.process = multiprocessing.Process(target=self.m_generate_chunk,args=(noise,)) 
+        self.array = np.zeros((self.chunk_width+2,self.chunk_height,self.chunk_width+2),dtype=np.float32)
         
     def load_chunk(self,filename):
         chunk_arr = np.load(filename,allow_pickle=True)
@@ -28,19 +27,7 @@ class Chunk():
         print(str.format("loaded chunk {0}",chunk_arr[1]))
         self.is_generated = True
 
-    def m_gen(self):
-        if not self.process.is_alive() and not self.is_generated:
-            self.process.start()
-
-    
-
-    #def generate_chunk(self):
-        #self.populate_chunk()
-        #asyncio.run(self.populate_chunk())
-        #self.is_generated=True
-
     def populate_chunk(self):
-        self.array = np.zeros((self.chunk_width+2,self.chunk_height,self.chunk_width+2),dtype=np.float32)
         cp = self.chunk_position
         tic = time.perf_counter()
         
@@ -50,7 +37,7 @@ class Chunk():
                 for y in range(self.chunk_height):
                     #val = self.noise[x,z]
                     
-                    val = (self.world.simplex.noise2d((self.chunk_position[0]*self.chunk_width+x-1)/10,(self.chunk_position[1]*self.chunk_width+z-1)/10)+1)/2
+                    val = (self.noise.noise2d((self.chunk_position[0]*self.chunk_width+x-1)/10,(self.chunk_position[1]*self.chunk_width+z-1)/10)+1)/2
                     #val += (self.world.simplex2.noise2d((self.chunk_position[0]*self.chunk_width+x)/5,(self.chunk_position[1]*self.chunk_width+z)/5)+1)/4
                     
                     

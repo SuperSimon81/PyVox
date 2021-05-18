@@ -19,6 +19,11 @@ import World
 
 root_path = Path(__file__).parent
 
+
+
+
+
+
 class Textures(ExampleWindow):
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
@@ -47,6 +52,10 @@ class Textures(ExampleWindow):
         
         self.mouse_enabled = False
 
+
+
+
+
     def init(self, platform_data):
         float_size = np.dtype(np.float32).itemsize
         self.init_conf.platform_data = platform_data
@@ -55,6 +64,12 @@ class Textures(ExampleWindow):
         bgfx.reset(
             self.width, self.height, BGFX_RESET_VSYNC, self.init_conf.resolution.format,
         )
+
+
+        caps = bgfx.Caps()
+
+        
+
         glfw.set_input_mode(self.window,glfw.CURSOR,glfw.CURSOR_DISABLED)
         
         self.lastX, self.lastY, buttons_states = self.get_mouse_state()
@@ -91,8 +106,8 @@ class Textures(ExampleWindow):
 
         glfw.set_key_callback(self.window,self.key_event)
         
-        self.world = World.World() 
-        self.world.generate_world(1)
+        self.world = World.World(1) 
+        
         
         #Offset stores chunkposition for the meshing compute shader
         self.offset_uniform = bgfx.create_uniform("_offset",bgfx.UniformType.VEC4)
@@ -121,40 +136,43 @@ class Textures(ExampleWindow):
 
     def check_viewdistance(self):
         view_distance = self.world.view_distance
-        new_pos_x = math.floor(self.eye_glm.x/self.world.chunk_width)
-        new_pos_z = math.floor(self.eye_glm.z/self.world.chunk_width)
-
-        #Check if we are in the same chunk, the quit
-        if self.chunk_pos_x == new_pos_x and self.chunk_pos_z == new_pos_z:
-            return
+        new_pos_x = math.floor(self.eye_glm.z/self.world.chunk_width)
+        new_pos_z = math.floor(self.eye_glm.x/self.world.chunk_width)
         self.chunk_pos_x=new_pos_x
         self.chunk_pos_z=new_pos_z
+
+        self.world.harvest()
+        for x in range(new_pos_x-view_distance,new_pos_x+view_distance):
+            for z in range(new_pos_z-view_distance,new_pos_z+view_distance):
+                if not (x,z) in self.world.chunk_dict.keys(): 
+                    if not (x,z) in self.world.process_dictionary.keys():
+                        self.text = str.format("gonna make: {0} {1} you are at: {2} {3}",x,z,new_pos_x,new_pos_z)
+                       
+                        #print(str.format("gonna make chunk {0} {1}",x,z))
+                        #print(str.format("enqueing: {0} {1}",x,z))
+                        self.world.go([x,z])
+                else: 
+                    if not (x,z) in self.visible_chunks and self.world.chunk_dict[(x,z)].is_generated:
+                        #print(str.format("gonna make mesh: {0} {1}",x,z))
+                        self.generate_mesh(self.world.chunk_dict[(x,z)])
+        
+        for x in range(new_pos_x-view_distance,new_pos_x+view_distance):
+            self.visible_chunks.pop((x,new_pos_z-view_distance-1), None)
+            self.visible_chunks.pop((x,new_pos_z+view_distance+1), None)
+            self.visible_chunks.pop((x,new_pos_z-view_distance-2), None)
+            self.visible_chunks.pop((x,new_pos_z+view_distance+2), None)
+        
+        for z in range(new_pos_z-view_distance,new_pos_z+view_distance):
+            self.visible_chunks.pop((new_pos_x-view_distance-1,z), None)
+            self.visible_chunks.pop((new_pos_x+view_distance+1,z), None)
+            self.visible_chunks.pop((new_pos_x-view_distance-2,z), None)
+            self.visible_chunks.pop((new_pos_x+view_distance+2,z), None)
+            
+
+       
        
 
-    def init_texture_lookup(self):
-
-        self.texture_lookup_uniform = bgfx.create_uniform("s_texture_lookup", bgfx.UniformType.SAMPLER)
-        print("looping texture")
-        count=0
-        arr = np.zeros((64*64*64,3),np.uint8)
-        
-        
-        
-        for x in range(64):
-            for y in range(64):
-                for z in range(64):
-                        arr[count]=[x,y,z]
-                        count += 1
-
-        
-        #arr = arr[None,:]
-        print(count)
-        self.lookup = arr
-
-        tex_memory = bgfx.copy(as_void_ptr(arr.flatten()),len(arr.flatten())*8)
-        print("making texture")
-        self.texture_lookup = bgfx.create_texture2d(64,int(262144/64),False,1,bgfx.TextureFormat.RGB8, BGFX_SAMPLER_POINT,tex_memory) 
-        
+  
     def generate_mesh(self,chunk):
         if(chunk.is_generated):
             chunk.bgfx_init()
@@ -172,20 +190,20 @@ class Textures(ExampleWindow):
             
             self.visible_chunks[(chunk.chunk_position[0],chunk.chunk_position[1])] = chunk
             chunk.is_visible = True
-            print(chunk.vertex_buffer.__sizeof__())
+            #print(chunk.vertex_buffer.__sizeof__())
 
     def key_event(self,window,key,scancode,action,mods):
         self.key=key
         
         if key == glfw.KEY_W:
             if action == glfw.PRESS:
-                self.move = 1
+                self.move = 0.5
             if action == glfw.RELEASE:
                 self.move = 0
                 
         if key == glfw.KEY_S:
             if action == glfw.PRESS:
-                self.move = -1
+                self.move = -0.5
             if action == glfw.RELEASE:
                 self.move = 0
        
@@ -256,7 +274,7 @@ class Textures(ExampleWindow):
         self.eye_glm += self.move_side*(glm.cross(self.direction,up_glm)) 
         self.check_viewdistance()
 
-        self.text = str.format("y:{0} p:{1} x:{2} y:{3} z:{4} c:{5} {6}",round(self.yaw),round(self.pitch),round(self.eye_glm.x),round(self.eye_glm.y),round(self.eye_glm.z),self.chunk_pos_x,self.chunk_pos_z)
+        #self.text = str.format("y:{0} p:{1} x:{2} y:{3} z:{4} c:{5} {6} {7}",round(self.yaw),round(self.pitch),round(self.eye_glm.x),round(self.eye_glm.y),round(self.eye_glm.z),self.chunk_pos_x,self.chunk_pos_z,len(self.visible_chunks))
         view_glmlh = glm.lookAtRH(glm.vec3(self.eye_glm),glm.vec3(self.eye_glm+self.direction),glm.vec3(up_glm))
         proj_glmlh = glm.perspectiveRH(20, self.width / self.height, 0.1, 100000.0)
         

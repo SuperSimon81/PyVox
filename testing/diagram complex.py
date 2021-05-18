@@ -6,7 +6,7 @@ import cmath
 
 
 def S(z,rp):
-    return rp*cmath.exp(z) 
+    return rp*math.e**z 
 
 
 
@@ -20,18 +20,29 @@ cnums = []
 cnums2 = []
 #points = [[2, 1], [8, 1], [8, 4]]
 #polygon = plt.Polygon(points)
-for x in range(-100,100):
-    for y in range(-100,100):
-        cnums.append(complex(x,y))
+points = []
+cpoints = []
+for x in range(0,11):
+    points.append([complex(x,10),complex(x,10)])
+    points.append([complex(0,x),complex(10,x)])
+    cpoints.append([S(complex(x,0),2), S(complex(x,10),2)])
+    cpoints.append([S(complex(0,x),2), S(complex(10,x),2)])
+    
+for p in points:
+    plt.plot([p[0].real,p[1].real],[p[0].imag,p[1].imag])
 
-for c in cnums:
-    cnums2.append(S(c,rp))
+    
 
-X = [x.real for x in cnums2]
-Y = [x.imag for x in cnums2]
+for p in cpoints:
+    pass
+    plt.plot([p[0].real,p[1].real],[p[0].imag,p[1].imag])
 
-plt.scatter(X,Y, color='red')
-#line = plt.Polygon(points, closed=True, fill=None, edgecolor='r')
+
+
+
+
+
+#line = plt.Polygon(cnums2, closed=True, fill=None, edgecolor='r')
 
 #plt.gca().add_line(line)
 #plt.gca().add_line(points+last_points)
