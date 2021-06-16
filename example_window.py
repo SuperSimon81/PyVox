@@ -2,19 +2,14 @@ import ctypes
 import time
 import sys
 
-# noinspection PyPackageRequirements
 import glfw
-
-# noinspection PyUnresolvedReferences
 from bgfx import bgfx, ImGuiExtra, as_void_ptr
-
-# noinspection PyPackageRequirements,PyProtectedMember
 from glfw import _glfw as glfw_native
 
 
 class ExampleWindow(object):
     def __init__(self, width, height, title):
-        self.title = "pooop"
+        self.title = "PyVox"
         self.height = height
         self.width = width
         self.ctx = None

@@ -1,7 +1,6 @@
 import os
 from ctypes import Structure, c_float, c_uint32, sizeof
 from pathlib import Path
-#from PIL import Image 
 import numpy as np
 import glm 
 import glfw
@@ -18,12 +17,6 @@ import World
 
 
 root_path = Path(__file__).parent
-
-
-
-
-
-
 class Textures(ExampleWindow):
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
@@ -35,7 +28,6 @@ class Textures(ExampleWindow):
         self.init_conf.resolution.width = self.width
         self.init_conf.resolution.height = self.height
         self.visible_chunks = {}
-        #if "GITHUB_ACTIONS" in os.environ:
         self.init_conf.type = bgfx.RendererType.METAL
 
         self.init_conf.resolution.reset = BGFX_RESET_VSYNC
@@ -52,10 +44,6 @@ class Textures(ExampleWindow):
         
         self.mouse_enabled = False
 
-
-
-
-
     def init(self, platform_data):
         float_size = np.dtype(np.float32).itemsize
         self.init_conf.platform_data = platform_data
@@ -65,16 +53,12 @@ class Textures(ExampleWindow):
             self.width, self.height, BGFX_RESET_VSYNC, self.init_conf.resolution.format,
         )
 
-
         caps = bgfx.Caps()
-
-        
 
         glfw.set_input_mode(self.window,glfw.CURSOR,glfw.CURSOR_DISABLED)
         
         self.lastX, self.lastY, buttons_states = self.get_mouse_state()
         
-        #bgfx.set_debug(BGFX_DEBUG_TEXT)
         bgfx.set_view_clear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x00000000, 1.0, 0)
 
         self.vertex_layout = bgfx.VertexLayout()
@@ -96,7 +80,7 @@ class Textures(ExampleWindow):
                 "meshmaker.comp", ShaderType.COMPUTE, root_path=root_path
             ),True)
 
-        #This is needed for the atomic counter making sure the meshimaker writes properly to the vertex buffers
+        #This is needed for the atomic counter making sure the meshmaker writes properly to the vertex buffers
         self.reset_counter = bgfx.create_program(
             load_shader(
                 "reset_counter.comp",ShaderType.COMPUTE, root_path=root_path
@@ -107,7 +91,6 @@ class Textures(ExampleWindow):
         glfw.set_key_callback(self.window,self.key_event)
         
         self.world = World.World(1) 
-        
         
         #Offset stores chunkposition for the meshing compute shader
         self.offset_uniform = bgfx.create_uniform("_offset",bgfx.UniformType.VEC4)
@@ -168,11 +151,6 @@ class Textures(ExampleWindow):
             self.visible_chunks.pop((new_pos_x-view_distance-2,z), None)
             self.visible_chunks.pop((new_pos_x+view_distance+2,z), None)
             
-
-       
-       
-
-  
     def generate_mesh(self,chunk):
         if(chunk.is_generated):
             chunk.bgfx_init()
@@ -185,12 +163,10 @@ class Textures(ExampleWindow):
             bgfx.set_buffer(0,chunk.vertex_buffer,bgfx.Access.WRITE)
             bgfx.set_buffer(1,chunk.counter_buffer,bgfx.Access.READ_WRITE)
             bgfx.set_texture(2,self.data_uniform,chunk.data_texture)
-            #print(str.format("generated chunk: {0}",cp))
             bgfx.dispatch(0, self.cs_program, chunk.chunk_width,chunk.chunk_height,chunk.chunk_width)
-            
             self.visible_chunks[(chunk.chunk_position[0],chunk.chunk_position[1])] = chunk
             chunk.is_visible = True
-            #print(chunk.vertex_buffer.__sizeof__())
+            
 
     def key_event(self,window,key,scancode,action,mods):
         self.key=key
@@ -239,14 +215,12 @@ class Textures(ExampleWindow):
 
     def update(self, dt):
         float_size = np.dtype(np.float32).itemsize
-        #glfw.set_cursor_pos(self.window, self.width / 2, self.height / 2);
         self.elapsed_time += dt
         self.mouse_x, self.mouse_y, buttons_states = self.get_mouse_state()
         ImGuiExtra.imgui_begin_frame(
             int(self.mouse_x), int(self.mouse_y), buttons_states, 0, self.width, self.height
         )
-        #last_x = self.mouse_x
-        #last_y = self.mouse_y
+       
         self._imgui_panel()
         
         ImGuiExtra.imgui_end_frame()
@@ -326,14 +300,11 @@ class Textures(ExampleWindow):
         ImGui.begin("Info panel")
 
         ImGui.text(self.text)
-        
-        #ImGui.text(self.debug_text)
          
         ImGui.slider_float('light_x', self.light_x, 0, 100, '%.2f', 1)
         ImGui.slider_float('light_y', self.light_y, 0, 100, '%.2f', 1)
         ImGui.slider_float('light_z', self.light_z, 0, 100, '%.2f', 1)
        
-        #ImGui.text(self.light_info_text)
         ImGui.end()
 
     def color2float(self,color): 
