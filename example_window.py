@@ -5,8 +5,6 @@ import sys
 import glfw
 from bgfx import bgfx, ImGuiExtra, as_void_ptr
 from glfw import _glfw as glfw_native
-
-
 class ExampleWindow(object):
     def __init__(self, width, height, title):
         self.title = "PyVox"
@@ -53,7 +51,6 @@ class ExampleWindow(object):
         
         )
 
-    # noinspection PyProtectedMember
     def run(self):
         glfw_native.glfwCreateWindow.argtypes = [
             ctypes.c_int,
